@@ -24,3 +24,12 @@ organizationName := "Codacy"
 organizationHomepage := Some(new URL("https://www.codacy.com"))
 
 description := "Consul Scala Client"
+
+publishMavenStyle := true
+publishTo := {
+  val nexus = "http://jci.x2sy.com/nexus/content/repositories/"
+  if (isSnapshot.value)
+    Some("x2sy Snapshots" at nexus + "snapshots/")
+  else
+    Some("x2sy Releases" at nexus + "releases/")
+}
