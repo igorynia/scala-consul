@@ -46,16 +46,14 @@ trait CheckRequests extends CheckCreators{
 
 object CheckRequests{
 
-  def apply(basePath: String)(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): CheckRequests = new CheckRequests {
+  def apply()(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): CheckRequests = new CheckRequests {
 
-    import rb._
-
-    def register(check: Check): Future[Boolean] = responseStatusRequestMaker(
-      registerPath,_.put(Json.toJson(check))
+    def register(check: Check): Future[Boolean] = rb.responseStatusRequestMaker(
+      "/agent/check/register",_.put(Json.toJson(check))
     )(_ == Status.OK)
 
-    def deregister(checkId: CheckId): Future[Boolean] = responseStatusRequestMaker(
-      fullPathFor(s"deregister/$checkId"),_.get()
+    def deregister(checkId: CheckId): Future[Boolean] = rb.responseStatusRequestMaker(
+      s"/agent/check/deregister/$checkId",_.get()
     )(_ == Status.OK)
 
     def pass(checkId: CheckId,note:Option[String]): Future[Boolean] = functionForStatus("pass")(checkId,note)
@@ -65,13 +63,11 @@ object CheckRequests{
     def fail(checkId: CheckId,note:Option[String]): Future[Boolean] = functionForStatus("fail")(checkId,note)
 
     private def functionForStatus(status:String) = (checkId: CheckId,note:Option[String]) =>
-      responseStatusRequestMaker(
-        fullPathFor(s"$status/$checkId"),
+      rb.responseStatusRequestMaker(
+        s"/agent/check/$status/$checkId",
         (r:WSRequest) => note.map{ case note => r.withQueryString("note"->note) }.getOrElse( r ).get()
       )(_ == Status.OK)
 
-    private def fullPathFor(path: String) = s"$basePath/check/$path"
-
-    private lazy val registerPath = fullPathFor("register")
   }
+
 }

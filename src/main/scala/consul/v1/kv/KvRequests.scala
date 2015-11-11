@@ -16,13 +16,11 @@ trait KvRequests {
 
 object KvRequests {
 
-  def apply(basePath: String)(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): KvRequests = new KvRequests{
+  def apply()(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): KvRequests = new KvRequests{
 
-    import rb._
-
-    def get(key: String,recurse:Boolean,dc:Option[DatacenterId]) = erased(
-      jsonRequestMaker(
-        fullPathFor(key),
+    def get(key: String,recurse:Boolean,dc:Option[DatacenterId]) = rb.erased(
+      rb.jsonRequestMaker(
+        s"/kv/$key",
         httpFunc = recurseDcRequestHolder(recurse,dc).andThen( _.get() )
       )(_.validateOpt[List[KvValue]].map(_.getOrElse(List.empty)))
     )
@@ -31,15 +29,14 @@ object KvRequests {
       //this could be wrong - could be a simple string that is returned and we have to check if "true" or "false"
       val params = flags.map("flags"->_.toString).toList ++ acquire.map("acquire"->_.toString) ++ release.map("release"->_)
 
-      jsonDcRequestMaker(
-        fullPathFor(key),dc,
+      rb.jsonDcRequestMaker(
+        s"/kv/$key",dc,
         httpFunc = _.withQueryString(params:_*).put(value)
       )(_.validate[Boolean].getOrElse(false))
     }
 
     def delete(key: String, recurse: Boolean, dc:Option[DatacenterId]): Future[Boolean] = {
-
-      responseStatusRequestMaker(fullPathFor(key),
+      rb.responseStatusRequestMaker(s"/kv/$key",
        httpFunc = recurseDcRequestHolder(recurse,dc).andThen( _.delete() )
       )(_ => true)
     }
@@ -49,7 +46,6 @@ object KvRequests {
       (_:WSRequest).withQueryString(params:_*)
     }
 
-    private def fullPathFor(key: String) = s"$basePath/kv/$key"
   }
 
 

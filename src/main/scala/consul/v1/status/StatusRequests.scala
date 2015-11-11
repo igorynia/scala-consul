@@ -9,19 +9,16 @@ trait StatusRequests {
 }
 object StatusRequests{
 
-  def apply(basePath: String)(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): StatusRequests = new StatusRequests{
+  def apply()(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): StatusRequests = new StatusRequests{
 
-    import rb._
-
-    def leader(): Future[Option[String]] = erased(
-      jsonRequestMaker(fullPathFor("leader"),_.get())(_.validateOpt[String])
+    def leader(): Future[Option[String]] = rb.erased(
+      rb.jsonRequestMaker("/status/leader",_.get())(_.validateOpt[String])
     )
 
-    def peers(): Future[Seq[String]] = erased(
-      jsonRequestMaker(fullPathFor("peers"),_.get())(_.validate[Seq[String]])
+    def peers(): Future[Seq[String]] = rb.erased(
+      rb.jsonRequestMaker("/status/peers",_.get())(_.validate[Seq[String]])
     )
 
-    private def fullPathFor(path: String) = s"$basePath/status/$path"
   }
 
 }

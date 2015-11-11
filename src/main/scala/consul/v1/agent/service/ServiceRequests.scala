@@ -28,25 +28,21 @@ object ServiceRequests {
 
   private implicit lazy val CheckWrites: Writes[Check] = Json.writes[Check]
 
-  def apply(basePath: String)(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): ServiceRequests = new ServiceRequests{
-
-    import rb._
+  def apply()(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): ServiceRequests = new ServiceRequests{
 
     def maintenance(serviceID: ServiceId,enable:Boolean,reason:Option[String]): Future[Boolean] = {
       lazy val params = Seq(("enable",enable.toString)) ++ reason.map("reason"->_)
-      responseStatusRequestMaker(
-        fullPathFor(s"maintenance/$serviceID"),
+      rb.responseStatusRequestMaker(
+        s"/agent/service/maintenance/$serviceID",
         _.withQueryString(params:_*).put(JsNull)
       )(_ == Status.OK)
     }
 
     def register(localService: LocalService): Future[Boolean] =
-      responseStatusRequestMaker(fullPathFor("register"), _.put(Json.toJson(localService)))(_ == Status.OK)
+      rb.responseStatusRequestMaker(s"/agent/service/register", _.put(Json.toJson(localService)))(_ == Status.OK)
 
     def deregister(serviceID: ServiceId): Future[Boolean] =
-      responseStatusRequestMaker(fullPathFor(s"deregister/$serviceID"), _.get())(_ == Status.OK)
-
-    private def fullPathFor(path: String) = s"$basePath/service/$path"
+      rb.responseStatusRequestMaker(s"/agent/service/deregister/$serviceID", _.get())(_ == Status.OK)
 
   }
 

@@ -29,49 +29,40 @@ trait AgentRequests {
 
 object AgentRequests {
 
-  def apply(basePath: String)(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): AgentRequests = new AgentRequests {
+  def apply()(implicit executionContext: ExecutionContext, rb: ConsulRequestBasics): AgentRequests = new AgentRequests {
 
-    import rb._
-
-    def self() = erased(
-      jsonRequestMaker(fullPathFor("self"), _.get())(_.validate[JsObject])
+    def self() = rb.erased(
+      rb.jsonRequestMaker("/agent/self", _.get())(_.validate[JsObject])
     )
 
-    def join(address: String,wan:Boolean): Future[Boolean] = responseStatusRequestMaker(
-      fullPathFor(s"join/$address"),
+    def join(address: String,wan:Boolean): Future[Boolean] = rb.responseStatusRequestMaker(
+      "/agent/join/$address",
       (r:WSRequest) => (if(wan) r.withQueryString(("wan","1")) else r).get()
     )( _ == Status.OK )
 
-    def `force-leave`(node: Types.NodeId): Future[Boolean] = responseStatusRequestMaker(
-      fullPathFor(s"force-leave/$node"),_.get()
+    def `force-leave`(node: Types.NodeId): Future[Boolean] = rb.responseStatusRequestMaker(
+      s"/agent/force-leave/$node",_.get()
     )( _ == Status.OK )
 
     def maintenance(enable:Boolean,reason:Option[String]): Future[Boolean] = {
       lazy val params = Seq(("enable",enable.toString)) ++ reason.map("reason"->_)
-      responseStatusRequestMaker( maintenancePath, _.withQueryString(params:_*).put(JsNull) )(_ == Status.OK)
+      rb.responseStatusRequestMaker("/agent/maintenance", _.withQueryString(params:_*).put(JsNull) )(_ == Status.OK)
     }
 
-    def checks(): Future[Map[CheckId, Check]] = erased(
-      jsonRequestMaker(checksPath, _.get() )(
+    def checks(): Future[Map[CheckId, Check]] = rb.erased(
+      rb.jsonRequestMaker("/agent/checks", _.get() )(
         _.validate[Map[String,Check]].map(_.map{ case (key,value) => CheckId(key)->value })
       )
     )
 
-    def services(): Future[Map[ServiceId,Service]] = erased(
-      jsonRequestMaker(servicesPath, _.get() )(
+    def services(): Future[Map[ServiceId,Service]] = rb.erased(
+      rb.jsonRequestMaker("/agent/services", _.get() )(
         _.validate[Map[String,Service]].map(_.map{ case (key,value) => ServiceId(key)->value })
       )
     )
 
-    lazy val service: ServiceRequests = ServiceRequests(currPath)
-    lazy val check:CheckRequests = CheckRequests(currPath)
-
-    private lazy val maintenancePath = fullPathFor("maintenance")
-    private lazy val checksPath = fullPathFor("checks")
-    private lazy val servicesPath = fullPathFor("services")
-
-    private lazy val currPath = s"$basePath/agent"
-    private def fullPathFor(path: String) = s"$currPath/$path"
+    lazy val service: ServiceRequests = ServiceRequests()
+    lazy val check: CheckRequests = CheckRequests()
 
   }
 }
