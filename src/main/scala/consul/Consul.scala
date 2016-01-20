@@ -26,13 +26,13 @@ trait ConsulApiV1{
 
 }
 
-class Consul(baseUrl: String, token: Option[String] = None)(implicit ec: ExecutionContext){
+class Consul(baseUrl: String, token: Option[String])(implicit ec: ExecutionContext){
 
-  require(!baseUrl.endsWith("/"), "Base url shouldn't end with slash")
-
-  def this(address: Inet4Address, port: Int = 8500, token: Option[String] = None)(implicit ec: ExecutionContext) = {
+  def this(address: Inet4Address, port: Int, token: Option[String])(implicit ec: ExecutionContext) = {
     this(s"http://${address.getHostAddress}:$port", token)(ec)
   }
+
+  require(!baseUrl.endsWith("/"), "Base url shouldn't end with slash")
 
   lazy val v1: ConsulApiV1 with Types = new ConsulApiV1 with Types{
     private lazy val basePath = s"$baseUrl/v1"
