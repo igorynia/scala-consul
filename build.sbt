@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-ws"   % "2.4.3"
 )
 
-organization := "com.codacy"
+organization := "com.x2sy"
 organizationName := "Codacy"
 organizationHomepage := Some(new URL("https://www.codacy.com"))
 
