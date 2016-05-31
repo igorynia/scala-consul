@@ -37,7 +37,7 @@ class Consul(ws: WSClient, baseUrl: String, token: Option[String])(implicit ec: 
 
   lazy val v1: ConsulApiV1 with Types = new ConsulApiV1 with Types{
     private lazy val basePath = s"$baseUrl/v1"
-    private implicit def requestBasics = new ConsulRequestBasics(basePath, token)
+    private implicit def requestBasics = new ConsulRequestBasics(ws, basePath, token)
 
     lazy val health:  HealthRequests  = HealthRequests()
     lazy val agent:   AgentRequests   = AgentRequests()
