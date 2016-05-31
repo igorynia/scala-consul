@@ -29,8 +29,8 @@ trait ConsulApiV1{
 
 class Consul(ws: WSClient, baseUrl: String, token: Option[String])(implicit ec: ExecutionContext){
 
-  def this(address: Inet4Address, port: Int, token: Option[String])(implicit ec: ExecutionContext) = {
-    this(s"http://${address.getHostAddress}:$port", token)(ec)
+  def this(ws: WSClient, address: Inet4Address, port: Int, token: Option[String])(implicit ec: ExecutionContext) = {
+    this(ws, s"http://${address.getHostAddress}:$port", token)(ec)
   }
 
   require(!baseUrl.endsWith("/"), "Base url shouldn't end with slash")
