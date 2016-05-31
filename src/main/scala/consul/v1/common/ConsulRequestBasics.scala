@@ -2,12 +2,12 @@ package consul.v1.common
 
 import consul.v1.common.Types.DatacenterId
 import play.api.libs.json._
-import play.api.libs.ws.{WS, WSRequest, WSResponse}
-import play.api.Play.current
+import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class ConsulRequestBasics(token: Option[String]) {
+class ConsulRequestBasics(ws: WSClient, token: Option[String]) {
 
   type HttpFunc = WSRequest => Future[WSResponse]
   type RequestTransformer = WSRequest => WSRequest
@@ -40,7 +40,7 @@ class ConsulRequestBasics(token: Option[String]) {
   }
 
   private def genRequestMaker[A,B](path: String, httpFunc: HttpFunc)(responseTransformer: WSResponse => B)(body: B => A)(implicit executionContext: ExecutionContext): Future[A] = {
-    Try((withToken(token) andThen httpFunc)(WS.url(path))) match {
+    Try((withToken(token) andThen httpFunc)(ws.url(path))) match {
       case Failure(exception) => Future.failed(exception)
       case Success(resultF)   => resultF.map( responseTransformer andThen body )
     }

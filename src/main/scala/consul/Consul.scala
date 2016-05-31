@@ -11,6 +11,7 @@ import consul.v1.health.HealthRequests
 import consul.v1.kv.KvRequests
 import consul.v1.session.SessionRequests
 import consul.v1.status.StatusRequests
+import play.api.libs.ws.WSClient
 
 import scala.concurrent.ExecutionContext
 
@@ -26,11 +27,11 @@ trait ConsulApiV1{
 
 }
 
-class Consul(address: Inet4Address, port: Int = 8500, token: Option[String] = None)
+class Consul(ws: WSClient, address: Inet4Address, port: Int = 8500, token: Option[String] = None)
             (implicit executionContext: ExecutionContext){
 
   lazy val v1: ConsulApiV1 with Types = new ConsulApiV1 with Types{
-    private implicit def requestBasics = new ConsulRequestBasics(token)
+    private implicit def requestBasics = new ConsulRequestBasics(ws, token)
     private lazy val basePath = s"http://${address.getHostAddress}:$port/v1"
     lazy val health:  HealthRequests  = HealthRequests( basePath)
     lazy val agent:   AgentRequests   = AgentRequests(  basePath)
