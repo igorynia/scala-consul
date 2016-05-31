@@ -11,6 +11,7 @@ import consul.v1.health.HealthRequests
 import consul.v1.kv.KvRequests
 import consul.v1.session.SessionRequests
 import consul.v1.status.StatusRequests
+import play.api.libs.ws.WSClient
 
 import scala.concurrent.ExecutionContext
 
@@ -26,7 +27,7 @@ trait ConsulApiV1{
 
 }
 
-class Consul(baseUrl: String, token: Option[String])(implicit ec: ExecutionContext){
+class Consul(ws: WSClient, baseUrl: String, token: Option[String])(implicit ec: ExecutionContext){
 
   def this(address: Inet4Address, port: Int, token: Option[String])(implicit ec: ExecutionContext) = {
     this(s"http://${address.getHostAddress}:$port", token)(ec)
