@@ -1,6 +1,6 @@
 name := """scala-consul"""
 
-version := "1.1.2"
+version := "1.2.0"
 
 scalaVersion := "2.11.7"
 
@@ -15,8 +15,8 @@ scalacOptions ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest"     %% "scalatest" % "2.2.5" % Test,
-  "com.typesafe.play" %% "play-json" % "2.4.3",
-  "com.typesafe.play" %% "play-ws"   % "2.4.3"
+  "com.typesafe.play" %% "play-json" % "2.5.3",
+  "com.typesafe.play" %% "play-ws"   % "2.5.3"
 )
 
 organization := "com.x2sy"
