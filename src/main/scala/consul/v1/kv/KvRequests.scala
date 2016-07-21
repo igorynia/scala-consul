@@ -2,6 +2,7 @@ package consul.v1.kv
 
 import consul.v1.common.ConsulRequestBasics
 import consul.v1.common.Types._
+import consul.v1.session.SessionId
 import play.api.http.{ContentTypeOf, Writeable}
 import play.api.libs.ws.WSRequest
 
@@ -10,7 +11,7 @@ trait KvRequests {
 
   def get(key:String,recurse:Boolean=false,dc:Option[DatacenterId]=Option.empty): Future[List[KvValue]]
   //def getRaw(key:String): Future[Option[String]]
-  def put[T](key: String, value: T, flags: Option[Int]=Option.empty, acquire: Option[Int]=Option.empty, release: Option[String]=Option.empty,dc:Option[DatacenterId]=Option.empty)(implicit wrt: Writeable[T], ct: ContentTypeOf[T]):Future[Boolean]
+  def put[T](key: String, value: T, flags: Option[Int]=Option.empty, acquire: Option[SessionId]=Option.empty, release: Option[SessionId]=Option.empty,dc:Option[DatacenterId]=Option.empty)(implicit wrt: Writeable[T], ct: ContentTypeOf[T]):Future[Boolean]
   def delete(key:String,recurse:Boolean,dc:Option[DatacenterId]=Option.empty):Future[_]
 }
 
@@ -25,9 +26,13 @@ object KvRequests {
       )(_.validateOpt[List[KvValue]].map(_.getOrElse(List.empty)))
     )
 
-    def put[T](key: String, value: T, flags: Option[Int], acquire: Option[Int], release: Option[String], dc:Option[DatacenterId])(implicit wrt: Writeable[T], ct: ContentTypeOf[T]): Future[Boolean] = {
+    def put[T](key: String, value: T, flags: Option[Int], acquire: Option[SessionId], release: Option[SessionId], dc:Option[DatacenterId])(implicit wrt: Writeable[T], ct: ContentTypeOf[T]): Future[Boolean] = {
       //this could be wrong - could be a simple string that is returned and we have to check if "true" or "false"
-      val params = flags.map("flags"->_.toString).toList ++ acquire.map("acquire"->_.toString) ++ release.map("release"->_)
+      val params = Seq.concat(
+        flags.map("flags" -> _.toString),
+        acquire.map("acquire" -> _.value),
+        release.map("release" -> _.value)
+      )
 
       rb.jsonDcRequestMaker(
         s"/kv/$key",dc,
